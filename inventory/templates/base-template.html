@@ -46,7 +46,39 @@
             </style>
         {% endif %}
         <style>
-            .container { padding-top: 70px; }
+            .container { 
+                padding-top: 70px;
+                padding-left: 1px;
+            }
+            .th_color {
+                background-color: #a6ff00;
+            }
+            .error_color {
+                background-color: tomato;
+            }
+            .reorder_color {
+                background-color: powderblue;
+            }
+            .tableFixHead thead th  {
+                position: sticky;
+                top: 3rem;
+                background-color: #a6ff00;
+                overflow-y: auto;
+            }
+            tbody {
+                background-color: whitesmoke;
+            }
+            th, td {
+                padding: 2px;
+                text-align: left;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                border: 1px solid;
+                overflow: scroll;
+            }
+            tr:hover {background-color: coral;}
         </style>
     </head>
     <body>

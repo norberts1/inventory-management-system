@@ -1,33 +1,66 @@
 {% extends 'base-template.html' %}
 {% block content %}
     <div class="container">
-        <table class="table">
+        <table class="tableFixHead">
             <thead>
+                <tr class="col th_color">
                 <th scope="col">Location ID</th>
                 <th scope="col">Location Name</th>
+                <th scope="col">Location Type</th>
+                <th scope="col">Write protected</th>
                 <th></th>
+                </tr>
             </thead>
             <tbody>
                 {% for location in warehouses %}
                     <tr>
                         <td>{{ location[0] }}</td>
                         <td>{{ location[1] }}</td>
-                        <td>
-                            <a href="{{ url_for('delete', loc_id=location[0], type='location') }}">
-                                <button name="button" type="button" class="btn btn-danger" value= "delete" >delete</button><br>
-                            </a>
-                        </td>
+                        <!-- check Location Type flag -->
+                        {% if location[2] == 1 %}
+                            <td>Project</td>
+                        {% else %}
+                            <td>Warehouse</td>
+                        {% endif %}
+                        <!-- check write-protection flag, deletion not possible if protected -->
+                        {% if location[3] == 0 %}
+                            <td>No</td>
+                            <td>
+                                <a href="{{ url_for('delete', loc_id=location[0], type='location') }}">
+                                    <button name="button" type="button" class="btn btn-danger" value= "delete" >delete</button><br>
+                                </a>
+                            </td>
+                        {% else %}
+                            <td>Yes</td>
+                        {% endif %}
                         <td>
                             <button name="button" type="button" class="btn btn-success" value= "edit" data-toggle="modal" data-target="#edit_{{ location[0] }}" >edit</button><br>
                                 <div id="edit_{{ location[0] }}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="trans_message" aria-hidden="true">
                                 <form action="{{ url_for('edit', type='location') }}" method="post">
                                     <div class="modal-dialog" role="document">
                                         <div class="modal-content">
-                                            <div class="modal-body"><input name="loc_name" placeholder="{{ location[1] }}"></div>
+                                            <div class="modal-body"><input name="loc_name" placeholder="{{ location[1] }}">
+                                                <text class="font-weight-light">Location Name</text>
+                                            </div>
+                                            <div class="modal-body">
+                                                <text class="font-weight-light">Location Type</text>
+                                                <select id="location_type" name= "loc_type" size="2" required>
+                                                    <option>Warehouse</option>
+                                                    <option>Project</option>
+<!--                                                    <option value=Project selected>{{ location[2] }}</option>   -->
+                                                </select>
+                                            </div>
+                                            <div class="modal-body">
+                                                <text class="font-weight-light">Write protected</text>
+                                                <select id="location_protected" name= "loc_protect" size="2" required>
+                                                    <option>No</option>
+                                                    <option>Yes</option>
+                                                </select>
+                                            </div>
                                             <div class="modal-footer">
                                                 <input name="loc_id" value="{{ location[0] }}" hidden aria-hidden="true">
                                                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                                                    <button type="submit" class="btn btn-primary">Save changes</button>
+                                                <button type="submit" class="btn btn-primary">Save changes</button>
                                             </div>
                                         </div>
                                     </div>
@@ -36,12 +69,41 @@
                         </td>
                     </tr>
                 {% endfor %}
-                <!-- Inserting data -->
+            </tbody>
+        </table>
+
+        <hr>
+
+        <h3 align="left">New Location Input</h3>
+        <!-- Inserting data -->
+        <table class="table">
+            <thead>
+                <tr class="col th_color">
+                <th scope="col">Location ID</th>
+                <th scope="col">Location Name</th>
+                <th scope="col">Location Type</th>
+                <th scope="col">Write protect</th>
+                <th></th>
+                </tr>
+            </thead>
+            <tbody>
                 <tr>
                     <form action = "{{ url_for('location') }}" method = "POST">
                     <td></td>
                     <td>
-                        <input name= "warehouse_name" placeholder="Warehouse Name" required autofocus>
+                        <input name= "warehouse_name" placeholder="Location Name" required autofocus>
+                    </td>
+                    <td>
+                        <select id="location_type" name= "loc_type" size="2" required>
+                            <option>Warehouse</option>
+                            <option>Project</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select id="location_protected" name= "protected" size="2" required>
+                            <option>No</option>
+                            <option>Yes</option>
+                        </select>
                     </td>
                     <td>
                         <input type= "submit" class="btn btn-info btn-group-toggle" value= "submit" /><br>
@@ -49,6 +111,5 @@
                     </form>
                 </tr>
             </tbody>
-        </table>
     </div>
  {% endblock %}

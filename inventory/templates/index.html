@@ -1,20 +1,21 @@
 {% extends 'base-template.html' %}
 {% block content %}
-    <div class="container">
-    <h3 align="center">Description</h3>
+    <div class="container" style="float: contour;" align="center">
+        <h3 align="center">Description</h3>
         <div style="height: 50%;width: 100%; float: left">
             {% if warehouses == None or warehouses|length == 0 %}
-            <div style="float: left;width:50%;">
+            <div style="float: left;width:39%;">
                 <h3 align="center" class="font-weight-light">No Warehouse Data Available Yet</h3>
             </div>
             {% else %}
             <!-- Div to list all warehouses -->
-            <div style="float:left;width:50%">
-                <table class="table">
+            <div style="float:left;width:39%">
+                <table class="tableFixHead">
                     <thead>
-                        <tr>
+                        <tr class="col th_color">
                             <th scope="col">loc_id</th>
-                            <th scope="col">Name</th>
+                            <th scope="col">Location Name</th>
+                            <th scope="col">Location Type</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -22,6 +23,12 @@
                             <tr>
                                 <td>{{ warehouse[0] }}</td>
                                 <td>{{ warehouse[1] }}</td>
+                                {% if warehouse[2] == 0 %}
+                                    <td>Warehouse</td>
+                                {% endif %}
+                                {% if warehouse[2] == 1 %}
+                                    <td>Project</td>
+                                {% endif %}
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -29,18 +36,22 @@
             </div>
         {% endif %}
         {% if products == None or products|length == 0 %}
-            <div style="float: right;width: 50%;">
+            <div style="float: right;width: 60%;">
                 <h3 align="center" class="font-weight-light">No Product Data Available Yet</h3>
             </div>
         {% else %}
             <!-- Div to list all products -->
-            <div style="float:right;width:50%;">
-                <table class="table">
+            <div style="float:right;width:60%;">
+                <table class="tableFixHead">
                     <thead>
-                        <tr>
+                        <tr class="col th_color">
                             <th scope="col">prod_id</th>
                             <th scope="col">Name</th>
-                            <th scope="col">Count</th>
+                            <th scope="col">Total Quantity</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">Case Code</th>
+                            <th scope="col">Mfr.</th>
+                            <th scope="col">Part #</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -48,7 +59,15 @@
                             <tr>
                                 <td>{{ product[0] }}</td>
                                 <td>{{ product[1] }}</td>
-                                <td>{{ product[2] }}</td>
+                                {% if product[2] == 0 %}
+                                    <td class="col error_color">{{ product[2] }}</td>
+                                {% else %}
+                                    <td>{{ product[2] }}</td>
+                                {% endif %}
+                                <td>{{ product[5] }}</td>
+                                <td>{{ product[6] }}</td>
+                                <td>{{ product[7] }}</td>
+                                <td>{{ product[8] }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -59,30 +78,48 @@
     </div>
 
     <div class="container" style="float: contour;" align="center">
-    <h3 align="center">Summary</h3>
-        <div class="form-horizontal" title="Summary">
+        <h3 align="center">Summary</h3>
+        <div class="form-horizontal" title="Summary" style="width: 80%; float: center">
         {% if database == None or database|length == 0 %}
             <h3 align="center" class="font-weight-light">Summary not available yet</h3>
         {% else %}
             <!-- Summary needed -->
             <div>
-                <table class="table">
+                <table class="tableFixHead">
                     <thead>
-                        <tr>
+                        <tr class="col th_color">
                             <th scope="col">Product</th>
                             <th scope="col">Un-Allocated</th>
-                            <th scope="col">Total Count</th>
+                            <th scope="col">Total Quantity</th>
+                            <th scope="col">Product Request</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">Case Code</th>
+                            <th scope="col">Mfr.</th>
+                            <th scope="col">Part #</th>
                         </tr>
                     </thead>
-                    <thead>
+                    <tbody>
                         {% for data in database %}
                             <tr>
                                 <td>{{ data[0] }}</td>
                                 <td>{{ data[1] }}</td>
-                                <td>{{ data[2] }}</td>
+                                {% if data[2] == 0 %}
+                                    <td class="col error_color">{{ data[2] }}</td>
+                                {% else %}
+                                    <td>{{ data[2] }}</td>
+                                {% endif %}
+                                {% if data[3] == 0 %}
+                                    <td>{{ data[3] }}</td>
+                                {% else %}
+                                    <td class="col reorder_color">{{ data[3] }}</td>
+                                {% endif %}
+                                <td>{{ data[4] }}</td>
+                                <td>{{ data[5] }}</td>
+                                <td>{{ data[6] }}</td>
+                                <td>{{ data[7] }}</td>
                             </tr>
                         {% endfor %}
-                    </thead>
+                    </tbody>
                 </table>
             </div>
         {% endif %}

@@ -5,22 +5,40 @@
         {% if database == None or database|length == 0 %}
             <h3 align="center" class="font-weight-light">Summary not available yet</h3>
         {% else %}
-            <table class="table" id="summary">
+            <table class="tableFixHead" id="summary">
                 <thead>
-                <tr>
-                    <th scope="col">Product</th>
-                    <th scope="col">Warehouse</th>
-                    <th scope="col">Quantity</th>
+                <tr  class="col th_color">
+                    <th scope="col">Product Name</th>
+                    <th scope="col">Location Name</th>
+                    <th scope="col">Allocated Quantity</th>
+                    <th scope="col">Product Request</th>
+                    <th scope="col">Location Type</th>
+                    <th scope="col">write protected</th>
                 </tr>
                 </thead>
                 <tbody>
-                <!-- Showing current state (just as index.html -->
+                <!-- Showing current state (just as index.html 
+                       show only quantities > 0 or product-requests for projects
+                -->
                     {% for data in database %}
-                        {% if data[2] != 0 %}
+                        {% if data[2] != 0 or (data[3] > 0 and data[4] > 0) %}
                         <tr>
                             <td>{{ data[0] }}</td>
                             <td>{{ data[1] }}</td>
                             <td>{{ data[2] }}</td>
+                            <td>{{ data[3] }}</td>
+                            <!-- check Location Type flag -->
+                            {% if data[4] == 0 %}
+                                <td>Warehouse</td>
+                            {% else %}
+                                <td>Project</td>
+                            {% endif %}
+                            <!-- check write-protection flag -->
+                            {% if data[5] == 0 %}
+                                <td>No</td>
+                            {% else %}
+                                <td>Yes</td>
+                            {% endif %}
                         </tr>
                         {% endif %}
                     {% endfor %}
@@ -28,14 +46,14 @@
             </table>
         {% endif %}
 
-        <br><hr><br>
+        <hr>
 
         <!-- Inserting data -->
         <h3 align="center" class="font-weight-light">Make Product Movements</h3>
         <form action = "{{ url_for('movement') }}" method = "POST">
             <div class="form-row" title="Add logs">
                 <div class="col">
-                    <input name= "prod_name" id="prod_name" list="products" placeholder="Product Name" class="form-control" autocomplete="off" required autofocus>
+                    <input name= "prod_name" id="prod_name" title="Product Name" list="products" placeholder="Product Name" class="form-control" autocomplete="off" required autofocus>
                     <datalist id="products">
                         {% for product in products %}
                             <option value="{{ product[1] }}" id="prod_{{ product[0] }}">
@@ -43,10 +61,10 @@
                     </datalist>
                 </div>
                 <div class="col">
-                    <input name="from_loc" id="from_loc" list="locations_to_from" placeholder="From Warehouse" class="form-control" autocomplete="off">
+                    <input name="from_loc" id="from_loc" title="From Location" list="locations_to_from" placeholder="From Location" class="form-control" autocomplete="off">
                 </div>
                 <div class="col">
-                    <input name="to_loc" id="to_loc" list="locations_to_from" placeholder="To Warehouse" class="form-control" autocomplete="off">
+                    <input name="to_loc" id="to_loc" title="To Location" list="locations_to_from" placeholder="To Location" class="form-control" autocomplete="off">
                 </div>
                 <div class="col slide-container">
                     <!--input name="quantity" placeholder="Quantity" class="form-control" autocomplete="off" required-->
@@ -64,31 +82,34 @@
             </div>
         </form>
 
-        <br><hr><br>
+        <hr>
 
         <h3 align="center" class="font-weight-light">Logistics History</h3>
         {% if logs == None or logs|length == 0 %}
             <h3 align="center" class="font-weight-light">Data not available yet</h3>
         {% else %}
-            <table class="table">
+            <table class="tableFixHead">
                 <thead>
-                    <tr>
+                    <tr  class="col th_color">
                         <th scope="col">Transaction ID</th>
-                        <th scope="col">Product ID</th>
+                        <th scope="col">Product Name</th>
                         <th scope="col">From Location</th>
                         <th scope="col">To Location</th>
-                        <th scope="col">Quantity</th>
+                        <th scope="col">Quantity moved</th>
+                        <th scope="col">Quantity Request</th>
                         <th scope="col">UTC Timestamp</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for log in logs %}
+                    <!-- sequenz of log-data input: Index, prod_id,from_loc,to_loc,quantity, UTC-timestamp, needs_quantity -->
+                    {% for log in logs|reverse %}
                         <tr>
                             <td>{{ log[0] }}</td>
                             <td>{{ log[1] }}</td>
                             <td>{{ log[2] }}</td>
                             <td>{{ log[3] }}</td>
                             <td>{{ log[4] }}</td>
+                            <td>{{ log[6] }}</td>
                             <td>{{ log[5] }}</td>
                         </tr>
                     {% endfor %}
@@ -105,6 +126,11 @@
             products["{{ product[1] }}"] = "{{ product[2] }}";
         {% endfor %}
 
+        const location_type = {};
+        {% for type in location_type %}
+            location_type["{{ type[0] }}"] = "{{ type[1] }}";
+        {% endfor %}
+
         // this contains all allocated products in form --> product: location: quantity
         let summary = JSON.parse({{ allocated|tojson }});
         //console.log(summary);
@@ -117,39 +143,62 @@
         let to_loc = document.getElementById("to_loc");
         let from_loc = document.getElementById("from_loc");
 
-        //works fine DON'T TOUCH it lol
+        //
+        // Event-handler for mouse-events
+        //
+        to_loc.addEventListener("click", check_prod_name_value);
+        from_loc.addEventListener("click", check_prod_name_value);
+        from_loc.addEventListener("changed", update_max_value);
+        slider.addEventListener("mouseenter", update_max_value);
+
+        //
+        // script functions
+        //
         to_loc.onchange = function() {
             let max_val;
             if(!from_loc.value) {
-                max_val = products[(prod_name.value).toString()];
-                slider.setAttribute("max", max_val.toString());
-                max_limit.innerText = "Max: " + max_val;
-                //console.log('to_loc --> from_loc was null ', max_val)
+                if (!prod_name.value) {
+                    alert("Select 'Product Name' first!");
+                }else{
+                    loc_type = location_type[(to_loc.value).toString()];
+                    max_val  = products[(prod_name.value).toString()];
+                    if(parseInt(max_val) === 0){
+                        //only for project-locations force max_val to 100 max. needed quantity
+                        if (parseInt(loc_type) !== 0) {
+                            max_val=100;
+                        }
+                    }
+                    slider.setAttribute("max", max_val.toString());
+                    max_limit.innerText = "Max: " + max_val;
+                    //console.log('to_loc --> from_loc was null ', max_val)
 
+                    if(max_val === 0){
+                        document.getElementById("submit").disabled = true;
+                    }else{
+                        document.getElementById("submit").disabled = false;
+                    }
+                }
+            }
+            output.innerHTML = slider.value;
+        };
+
+        from_loc.onchange = function(){
+            let max_val = 0;
+            if (!prod_name.value) {
+                alert("Select 'Product Name' first!");
+            }else{
+                if (from_loc.value) {
+                    max_val = summary[(prod_name.value).toString()][(from_loc.value).toString()];
+                    slider.setAttribute("max", max_val.toString());
+                    max_limit.innerText = "Max: " + max_val;
+                    //console.log('from_loc --> to location updated ', max_val);
+                }
                 if(max_val === 0){
                     document.getElementById("submit").disabled = true;
                 }else{
                     document.getElementById("submit").disabled = false;
                 }
             }
-
-            output.innerHTML = slider.value;
-        };
-
-        //works fine DON'T TOUCH it lol
-        from_loc.onchange = function(){
-            let max_val;
-            max_val = summary[(prod_name.value).toString()][(from_loc.value).toString()];
-            slider.setAttribute("max", max_val.toString());
-            max_limit.innerText = "Max: " + max_val;
-            //console.log('from_loc --> to location updated ', max_val);
-
-            if(max_val === 0){
-                document.getElementById("submit").disabled = true;
-            }else{
-                document.getElementById("submit").disabled = false;
-            }
-
             output.innerHTML = slider.value;
         };
 
@@ -165,8 +214,29 @@
             }else{
                 document.getElementById("submit").disabled = false;
             }
-
         };
 
+        function update_max_value (obj) {
+            let max_val = 0;
+            if (!prod_name.value) {
+                alert("Select 'Product Name' first!");
+            }else{
+                if (from_loc.value) {
+                    max_val = summary[(prod_name.value).toString()][(from_loc.value).toString()];
+                    slider.setAttribute("max", max_val.toString());
+                    max_limit.innerText = "Max: " + max_val;
+                    output.innerHTML = max_val;
+                    if (max_val === 0) {
+                        alert("Product :'"+(prod_name.value).toString()+"' not available in \nLocation:'"+(from_loc.value).toString()+"' !");
+                    }
+                }
+            }
+            output.innerHTML = slider.value;
+        };
+        function check_prod_name_value (obj) {
+            if (!prod_name.value) {
+                alert("Select 'Product Name' first!");
+            }
+        };
     </script>
 {% endblock %}

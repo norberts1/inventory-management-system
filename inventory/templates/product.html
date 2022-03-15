@@ -1,30 +1,60 @@
 {% extends 'base-template.html' %}
 {% block content %}
     <div class="container">
-        <table class="table">
+        <table class="tableFixHead">
             <thead>
+                <tr  class="col th_color">
                 <th scope="col">Product ID</th>
                 <th scope="col">Product Name</th>
-                <th scope="col">Quantity</th>
+                <th scope="col">Total Quantity</th>
+                <th scope="col">Product Request</th>
+                <th scope="col">Type</th>
+                <th scope="col">[Case Code]</th>
+                <th scope="col">[Mfr.]</th>
+                <th scope="col">[Part #]</th>
+                <th scope="col">write protected</th>
+                </tr>
             </thead>
             <tbody>
                 {% for product in products %}
                     <tr>
                         <td>{{ product[0] }}</td>
                         <td>{{ product[1] }}</td>
-                        <td>{{ product[2] }}</td>
-                        <td>
-                            <a href="{{ url_for('delete', prod_id=product[0], type='product') }}">
-                                <button name="button" type="button" class="btn btn-danger" value= "delete" >delete</button><br>
-                            </a>
-                        </td>
+                        {% if product[2] == 0 %}
+                            <td class="col error_color">{{ product[2] }}</td>
+                        {% else %}
+                            <td>{{ product[2] }}</td>
+                        {% endif %}
+                        <!-- Product request coloured if any request needed -->
+                        {% if product[4] == 0 %}
+                            <td>{{ product[4] }}</td>
+                        {% else %}
+                            <td class="col reorder_color">{{ product[4] }}</td>
+                        {% endif %}
+                        <td>{{ product[5] }}</td>
+                        <td>{{ product[6] }}</td>
+                        <td>{{ product[7] }}</td>
+                        <td>{{ product[8] }}</td>
+                        <!-- check write-protection flag, deletion not possible if protected -->
+                        {% if product[9] == 0 %}
+                            <td>No</td>
+                            <td>
+                                <a href="{{ url_for('delete', prod_id=product[0], type='product') }}">
+                                    <button name="button" type="button" class="btn btn-danger" value= "delete" >delete</button><br>
+                                </a>
+                            </td>
+                        {% else %}
+                            <td>Yes</td>
+                        {% endif %}
                         <td>
                             <button name="button" type="button" class="btn btn-success" value= "edit" data-toggle="modal" data-target="#edit_{{ product[0] }}" >edit</button><br>
                             <div id="edit_{{ product[0] }}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="trans_message" aria-hidden="true">
                                 <form action="{{ url_for('edit', type='product') }}" method="post" class="base_form">
                                 <div class="modal-dialog" role="document">
                                     <div class="modal-content">
-                                        <div class="modal-body"><input name="prod_name" placeholder="{{ product[1] }}"></div>
+                                        <div class="modal-body"><input name="prod_name" placeholder="{{ product[1] }}">
+                                            <text class="font-weight-light">Product name</text>
+                                        </div>
                                         <div class="modal-body">
                                             <input name="prod_quantity" placeholder="{{ product[2] }}" id="input_{{ product[0] }}" type="number">
                                             <script>
@@ -47,12 +77,31 @@
                                                     }
                                                 };
                                             </script>
-                                            <text class="font-weight-light">(only increase count)</text>
+                                            <text class="font-weight-light">Quantity (only increase count)</text>
+                                        </div>
+                                        <div class="modal-body"><input name="prod_type" placeholder="{{ product[5] }}">
+                                            <text class="font-weight-light">Product type (Resistor | C | L etc.)</text>
+                                        </div>
+                                        <div class="modal-body"><input name="prod_detail1" placeholder="{{ product[6] }}">
+                                            <text class="font-weight-light">Case code (optional)</text>
+                                        </div>
+                                        <div class="modal-body"><input name="prod_detail2" placeholder="{{ product[7] }}">
+                                            <text class="font-weight-light">Manufacturer (optional)</text>
+                                        </div>
+                                        <div class="modal-body"><input name="prod_detail3" placeholder="{{ product[8] }}">
+                                            <text class="font-weight-light">Part # (optional)</text>
+                                        </div>
+                                        <div class="modal-body">
+                                            <select id="prod_protected" name= "prod_protect" size="2">
+                                                <option>No</option>
+                                                <option>Yes</option>
+                                            </select>
+                                            <text class="font-weight-light">Write protect</text>
                                         </div>
                                         <div class="modal-footer">
                                             <input name="prod_id" value="{{ product[0] }}" hidden aria-hidden="true">
                                             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                                                <button type="submit" class="btn btn-primary">Save changes</button>
+                                            <button type="submit" class="btn btn-primary">Save changes</button>
                                         </div>
                                     </div>
                                 </div>
@@ -61,15 +110,54 @@
                         </td>
                     </tr>
                 {% endfor %}
-                <!-- Inserting data -->
+            </tbody>
+        </table>
+        <br>
+
+        <hr>
+
+        <!-- Inserting data -->
+        <h3 align="left">New Product Input</h3>
+        <table class="table">
+            <thead>
+                <tr  class="col th_color">
+                <th scope="col">Product ID</th>
+                <th scope="col">Product Name</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Type</th>
+                <th scope="col">[Case Code]</th>
+                <th scope="col">[Mfr.]</th>
+                <th scope="col">[Part #]</th>
+                <th scope="col">Write protect</th>
+                </tr>
+            </thead>
+            <tbody>
                 <tr>
                     <form action = "{{ url_for('product') }}" method = "POST">
                         <td></td>
                         <td>
-                            <input name = "prod_name" placeholder="Product Name" required autofocus>
+                            <input name = "prod_name" placeholder="Product Name (Unique!)" required autofocus>
                         </td>
                         <td>
                             <input name = "prod_quantity" placeholder="Quantity" required>
+                        </td>
+                        <td>
+                            <input name = "prod_type" placeholder="Type" required autofocus>
+                        </td>
+                        <td>
+                            <input name = "prod_detail1" placeholder="Case Code (optional)" autofocus>
+                        </td>
+                        <td>
+                            <input name = "prod_detail2" placeholder="Mfr. (optional)" autofocus>
+                        </td>
+                        <td>
+                            <input name = "prod_detail3" placeholder="Part # (optional)" autofocus>
+                        </td>
+                        <td>
+                            <select id="product_protected" name= "prod_protect" size="2" required>
+                                <option>No</option>
+                                <option>Yes</option>
+                            </select>
                         </td>
                         <td>
                             <input type= "submit" class="btn btn-info btn-group-toggle" value= "submit" /><br>
@@ -77,7 +165,7 @@
                     </form>
                 </tr>
             </tbody>
-        </table>
+        <br>
     </div>
     <script>
         let close = document.getElementsByClassName("btn btn-default");
