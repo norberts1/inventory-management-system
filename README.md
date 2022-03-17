@@ -4,6 +4,7 @@
 
 ## Table of Contents
 
+  - [Infos on this fork](docs/fork_infos.md)
   - [Installation](#installation)
   - [Overview](#overview)
   - [Usage](#usage)
@@ -15,14 +16,19 @@
   - [Dependencies](requirements.txt)
   - [License](#license)
 
-## Installation
+## Installation<a name="installation"></a>
 
-Clone the git
-repository:
+Clone this repository:
+
+``` sourceCode console
+$ git clone https://github.com/norberts1/inventory-management-system.git
+$ cd inventory-management-system
+```
+
+This fork is based on git repository:
 
 ``` sourceCode console
 $ git clone https://github.com/gavindsouza/inventory-management-system.git
-$ cd inventory-management-system
 ```
 ![](docs/util/1.gif)
 
@@ -40,24 +46,30 @@ $ pip3 install flask
 ![](docs/util/2.gif)
 
 
-## Overview
+## Overview<a name="overview"></a>
 
 The _index page_ or _summary_ covers the summary of the system containing lists of products and location along with a count of unallocated products.
 On the _products page_, we can add/edit/remove products from the system. The _location page_ covers similar functionality in the context of locations or warehouses.
 On the _logistics  page_, movement of products can be performed. It also maintains the history of all transactions in a tabular form.
 
-## Usage
+## Usage<a name="usage"></a>
 
-### Starting Things Up
+### Starting Things Up<a name="starting-things-up"></a>
 
 To run the application, change the current working directory to
 \~/inventory-management-system/inventory/
 
+run the app by typing the following command(s) in your terminal
+
+``` sourceCode console
+$ ./runinventory.sh
+```
+
+or alternatively use
+
 ``` sourceCode console
 $ cd inventory
 ```
-
-run the app by typing the following command in your terminal
 
 ``` sourceCode console
 $ python3 -m flask run
@@ -73,20 +85,20 @@ This view of the system can be accessed for demo purposes on installation, to st
 
 ![](docs/util/5.gif)
 
-### Getting Into It
+### Getting Into It<a name="getting-into-it"></a>
 
 A new system will look like this
 
 ![](docs/util/6.gif)
 
-#### Adding Products and Locations
+#### Adding Products and Locations<a name="adding-products-and-locations"></a>
 
 To add products, only the name and quantity are required
 Adding locations needs only the name to be added
 
 ![](docs/util/7.gif)
 
-#### Moving Things Around
+#### Moving Things Around<a name="moving-things-around"></a>
 
 Products can be moved into and between warehouses *only after* they have been added to the system
 
@@ -98,7 +110,7 @@ Moving into locations
 
 Moving between locations
 
-#### Editing Existing Information
+#### Editing Existing Information<a name="editing-existing-information"></a>
 
 Editing Product Information
 
@@ -117,6 +129,8 @@ Deleting Products and Locations on the System
 
   - Just Flask\!
 
-## License
+## License<a name="license"></a>
 
 This code has been released under the [MIT License](LICENSE).
+
+See also: [Original Sources on github](https://github.com/gavindsouza/inventory-management-system)
